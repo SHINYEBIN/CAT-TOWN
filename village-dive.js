@@ -14,7 +14,8 @@ let haulTimer;
 const pond = { x: 77, y: 70 };
 let diveEntryPoint = pond;
 function nearPondShore() {
-  return ((position.x - 76.5) / 16) ** 2 + ((position.y - 82) / 15) ** 2 <= 1 && walkable(position);
+  return walkable(position) && !withinVillageSpot(cottage) &&
+    ((position.x - 77) / 18) ** 2 + ((position.y - 82) / 19) ** 2 <= 1;
 }
 const surface = { x: 17, y: 22, id: 'surface', label: '수면으로 올라가기' };
 const kelp = { x: 52, y: 67, id: 'kelp', label: '해초 뒤에 숨기' };

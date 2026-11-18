@@ -390,17 +390,41 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
 }
 .resident-greeting { white-space: pre-line; }
 
+#map-sign-art, #notice-board-art {
+  position: absolute; z-index: 2; top: 33.5%;
+  width: clamp(17px, 4.2%, 34px); height: clamp(12px, 4%, 25px);
+  transform: translate(-50%, -50%);
+  border: 2px solid #785331; border-radius: 1px; pointer-events: none;
+  box-shadow: 0 1px #3a271a;
+}
 #map-sign-art {
-  position: absolute; z-index: 2; left: 53.85%; top: 70.5%;
-  width: 2.45%; height: 1.7%; transform: translate(-50%, -50%);
-  border: 1px solid #785331; border-radius: 1px; pointer-events: none;
+  left: 68%;
   background:
     radial-gradient(ellipse at 75% 60%, #77ac9f 0 20%, transparent 24%),
     radial-gradient(ellipse at 21% 25%, #78965d 0 13%, transparent 18%),
     linear-gradient(138deg, transparent 39%, #bc814b 41% 54%, transparent 57%),
     #f1dc9a;
 }
-#village[data-night="true"] #map-sign-art { filter: brightness(.7); }
+#notice-board-art {
+  left: 77%;
+  background:
+    radial-gradient(circle at 27% 26%, #9b412b 0 7%, transparent 9%),
+    radial-gradient(circle at 73% 43%, #516746 0 7%, transparent 9%),
+    linear-gradient(#f3deb2, #f3deb2) 15% 30% / 39% 63% no-repeat,
+    linear-gradient(#e7c594, #e7c594) 87% 65% / 36% 58% no-repeat,
+    #ad7543;
+}
+#map-sign-art::after, #notice-board-art::after {
+  content: ''; position: absolute; top: 100%; left: 42%; width: 16%; height: 65%;
+  background: #785331; z-index: -1;
+}
+#village[data-night="true"] :is(#map-sign-art, #notice-board-art) { filter: brightness(.7); }
+#notice-dialog {
+  width: min(90vw, 385px); padding: 14px;
+  border: 4px solid #694326; background: #ffe5a6; color: #51321f; word-break: keep-all;
+}
+#notice-dialog::backdrop { background: #1b211ba6; }
+#notice-dialog button { margin-top: 8px; }
 
 #chichi, #chichi:hover { background: transparent; cursor: default; }
 

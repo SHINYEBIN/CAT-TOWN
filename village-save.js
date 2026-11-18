@@ -26,7 +26,8 @@ const villageSave = (() => {
         returnedFromClearing: source?.returnedFromClearing === true ||
           (source?.returnedFromClearing == null && scene === 'follow-chichi' && (source?.chichiAtPlaza === true || source?.chichiGuided === true)),
         diveComplete: source?.diveComplete === true, luluBriefed: source?.luluBriefed === true,
-        visitedTeaAfterDive: source?.visitedTeaAfterDive === true },
+        visitedTeaAfterDive: source?.visitedTeaAfterDive === true,
+        lostScarf: ['draft', 'posted', 'returned'].includes(source?.lostScarf) ? source.lostScarf : null },
       inventory: { abalone: count(value?.inventory?.abalone), wood: count(value?.inventory?.wood), stone: count(value?.inventory?.stone), seaweed: count(value?.inventory?.seaweed),
         flowers: count(value?.inventory?.flowers), crops: count(value?.inventory?.crops), fruit: count(value?.inventory?.fruit) },
       garden: Object.fromEntries(['flowers', 'crops', 'field', 'orchard'].map(id => [id, count(value?.garden?.[id])])),

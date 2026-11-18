@@ -1,14 +1,17 @@
 const fortuneDialog = document.querySelector('#fortune');
 const villageGuide = document.querySelector('#village-guide');
 villageGuide.addEventListener('close', () => map.focus({ preventScroll: true }));
-const mapSign = { id: 'map-sign', x: 54, y: 74 };
+const mapSign = { id: 'map-sign', x: 68, y: 37 };
+const noticeBoard = { id: 'notice-board', x: 77, y: 37 };
 const fountain = { id: 'fountain', x: 54, y: 61 };
+const cottage = { id: 'cottage', x: 89, y: 68, title: '작은 집', description: '창가에 햇살이 들고 작은 방석이 놓여 있어요.' };
 const villageSpots = [
   fountain,
   mapSign,
+  noticeBoard,
   { id: 'tea-house', x: 26, y: 40, title: '보리의 찻집', description: '따뜻한 물이 끓고 찻잎 향이 퍼져요.' },
   { id: 'town-hall', x: 58, y: 33, title: '마을 회관', description: '보리가 적어둔 환영회 일정표가 걸려 있어요.' },
-  { id: 'cottage', x: 89, y: 68, title: '작은 집', description: '창가에 햇살이 들고 작은 방석이 놓여 있어요.' }
+  cottage
 ];
 for (const spot of villageSpots) {
   const button = document.getElementById(spot.id);
@@ -19,6 +22,7 @@ for (const spot of villageSpots) {
 function updateVillageSpots(atDock) {
   for (const spot of villageSpots) document.getElementById(spot.id).hidden = atDock;
   document.querySelector('#map-sign-art').hidden = atDock;
+  document.querySelector('#notice-board-art').hidden = atDock;
 }
 function updateBoriHint(actor) {
   const hint = document.querySelector('#bori-hint');
@@ -36,6 +40,8 @@ function activateVillageSpot(spot) {
   target = null;
   if (spot === mapSign) {
     openVillageGuide();
+  } else if (spot === noticeBoard) {
+    openNoticeBoard();
   } else if (spot === fountain) {
     void tossVillageStone();
   } else if (spot.id === 'town-hall') {
@@ -46,7 +52,34 @@ function activateVillageSpot(spot) {
   return true;
 }
 function useNearbyVillageSpot() {
-  return activateVillageSpot(villageSpots.find(withinVillageSpot));
+  return activateVillageSpot(villageSpots.filter(withinVillageSpot).sort((a, b) => distanceTo(a) - distanceTo(b))[0]);
+}
+
+const noticeDialog = document.querySelector('#notice-dialog');
+const noticeMessage = document.querySelector('#notice-message');
+const noticeAction = document.querySelector('#notice-action');
+noticeDialog.addEventListener('close', () => map.focus({ preventScroll: true }));
+function openNoticeBoard() {
+  const status = villageSave.read().story.lostScarf;
+  noticeAction.hidden = true;
+  noticeMessage.textContent = {
+    draft: '코코와 쓴 안내문\n빨간 목도리를 주웠어요. 잃어버린 분은 코코에게 목도리의 특징을 알려주세요.',
+    posted: '빨간 목도리를 주웠어요.\n\n치치 “그거 내 목도리 같아. 안쪽에 내가 수놓은 고등어가 있거든!”',
+    returned: '빨간 목도리는 주인에게 돌아갔어요.'
+  }[status] ?? '아직 붙은 안내문이 없어요.';
+  if (status === 'draft' || status === 'posted') {
+    noticeAction.hidden = false;
+    noticeAction.textContent = status === 'draft' ? '안내문 붙이기' : '코코와 목도리 돌려주기';
+    noticeAction.onclick = () => {
+      villageSave.update({ story: { lostScarf: status === 'draft' ? 'posted' : 'returned' } });
+      noticeMessage.textContent = status === 'draft'
+        ? '안내문을 붙였어요. 다음에 게시판에 와서 목도리를 찾는 주민이 있는지 확인해 봐요.'
+        : '치치가 목도리를 받아 갔어요.\n\n코코 “네 말대로 하니까 주인 찾기가 쉽네. 다음 것도 같이 볼래?”';
+      noticeAction.hidden = true;
+      noticeDialog.querySelector('form button').focus();
+    };
+  }
+  noticeDialog.showModal();
 }
 
 const seoulTime = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -386,18 +419,30 @@ const teaLines = [
   ['coco', '보리, 얘는 누구야?'],
   ['bori', '우리 마을에서 잠깐 지내게 됐어.\n아직 낯설 테니까 잘 부탁해, 코코.']
 ];
+const scarfLines = [
+  ['bori', '이 마을에 오기 전엔 뭐 하고 지냈어?'],
+  ['player', '면접을 보러 가던 길이었어.\n그 뒤로는 기억이 잘 안 나.'],
+  ['bori', '그랬구나. 코코가 분실물을 정리하고 있어.\n안내문 쓰는 걸 좀 도와줄래?'],
+  ['coco', '보리, 나한테도 먼저 물어봐야지.\n…한 장 정도는 같이 써볼 수 있어.'],
+  ['coco', '빨간 목도리 하나야.\n게시판에 그렇게 써 두면 되겠지?'],
+  ['player', '안쪽에 생선 자수가 있네.\n이건 찾아오는 사람에게만 물어보자.'],
+  ['coco', '…좋아. 그럼 안내문은 네가 붙여줄래?\n회관 옆에 게시판이 있어.']
+];
 function updateTeaConversation(now) {
   if (!teaConversation) return;
   const index = Math.floor((now - teaConversation.started) / 3700);
-  if (index >= teaLines.length) {
+  if (index >= teaLines.length) servedTea.hidden = true;
+  if (index >= teaConversation.lines.length) {
+    villageSave.update({ story: { visitedTeaAfterDive: true, lostScarf: 'draft' } });
     teaConversation = undefined;
     teaDialogue.hidden = true;
     servedTea.hidden = true;
     return;
   }
-  const [speaker, line] = teaLines[index];
-  const actor = speaker === 'coco' ? cocoTeaSeat.cushion : bori.visit.moved;
-  teaDialogue.style.left = actor.x + '%';
+  const [speaker, line] = teaConversation.lines[index];
+  const actor = speaker === 'coco' ? cocoTeaSeat.cushion :
+    speaker === 'player' ? activeVillageSeat?.cushion ?? position : bori.visit.moved;
+  teaDialogue.style.left = Math.min(84, Math.max(16, actor.x)) + '%';
   teaDialogue.style.top = (actor.y - 13) + '%';
   if (teaDialogue.textContent !== line) teaDialogue.textContent = line;
   teaDialogue.hidden = false;
@@ -443,13 +488,14 @@ function setVillageInterior(room) {
   teaConversation = undefined;
   teaDialogue.hidden = true;
   servedTea.hidden = true;
-  if (room === 'tea-house' && teaInvitationPending()) {
-    villageSave.update({ story: { visitedTeaAfterDive: true } });
+  if (room === 'tea-house' && diveMastered && !villageSave.read().story.lostScarf) {
+    const welcome = teaInvitationPending();
     const now = performance.now();
     bori.route = [];
-    bori.visit = { door, until: now + 25000, moved: { x: 60, y: 49 } };
-    teaConversation = { started: now };
-    servedTea.hidden = false;
+    const lines = welcome ? [...teaLines, ...scarfLines] : scarfLines;
+    bori.visit = { door, until: now + lines.length * 3700 + 8000, moved: { x: 60, y: 49 } };
+    teaConversation = { started: now, lines };
+    servedTea.hidden = !welcome;
   }
   keys.clear();
   route = [];

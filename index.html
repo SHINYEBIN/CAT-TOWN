@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>고양이 마을 · 플레이 시안</title>
-  <link rel="stylesheet" href="village.css?v=opening-start">
-  <script src="village-save.js?v=opening-start" defer></script>
+  <link rel="stylesheet" href="village.css?v=pond-board">
+  <script src="village-save.js?v=pond-board" defer></script>
   <script src="village-sprites.js" defer></script>
-  <script src="village-extras.js?v=tea-cleanup" defer></script>
-  <script src="village-home.js?v=opening-start" defer></script>
-  <script src="village-dive.js?v=dive-guide" defer></script>
-  <script src="village-prologue.js?v=opening-start" defer></script>
-  <script src="village.js?v=dive-guide" defer></script>
+  <script src="village-extras.js?v=pond-board" defer></script>
+  <script src="village-home.js?v=pond-board" defer></script>
+  <script src="village-dive.js?v=pond-board" defer></script>
+  <script src="village-prologue.js?v=pond-board" defer></script>
+  <script src="village.js?v=pond-board" defer></script>
 </head>
 <body>
 <main>
@@ -44,6 +44,8 @@
     <span id="bori-hint" hidden>찻잎은 밭 앞 나무에서 따면 돼~</span>
     <span id="map-sign-art" aria-hidden="true"></span>
     <button id="map-sign" class="map-spot" type="button" aria-label="마을 지도 보기"></button>
+    <span id="notice-board-art" aria-hidden="true"></span>
+    <button id="notice-board" class="map-spot" type="button" aria-label="마을 게시판 보기"></button>
     <p id="dive-haul" role="status" hidden></p>
     <div id="dive-controls" hidden></div>
     <div id="lulu" class="resident" hidden><canvas width="24" height="24" aria-hidden="true"></canvas><span>루루</span></div>
@@ -101,6 +103,12 @@
     <form method="dialog"><button>닫기</button></form>
   </dialog>
   <dialog id="village-event" aria-labelledby="scene-title"></dialog>
+  <dialog id="notice-dialog" aria-labelledby="notice-title">
+    <h2 id="notice-title">마을 게시판</h2>
+    <p id="notice-message" aria-live="polite"></p>
+    <button id="notice-action" type="button" hidden></button>
+    <form method="dialog"><button>닫기</button></form>
+  </dialog>
   <dialog id="save-slots" aria-labelledby="save-slots-title">
     <h2 id="save-slots-title"></h2>
     <p id="save-slots-message" hidden></p>
