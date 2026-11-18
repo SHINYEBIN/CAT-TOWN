@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>고양이 마을 · 플레이 시안</title>
+  <link rel="stylesheet" href="village.css">
+  <script src="village-save.js" defer></script>
+  <script src="village-sprites.js" defer></script>
+  <script src="village-extras.js" defer></script>
+  <script src="village-home.js" defer></script>
+  <script src="village-dive.js" defer></script>
+  <script src="village-prologue.js" defer></script>
+  <script src="village.js" defer></script>
+</head>
+<body>
+<main>
+  <header><div class="village-tools"><span id="seoul-weather"></span><div class="village-tool-buttons"><button id="music" type="button" aria-label="음악 켜기" aria-pressed="false">🔇</button><button id="village-bag" type="button" aria-label="가방 열기" title="가방">🎒</button></div></div><span id="chapter"></span><div class="village-heading"><h1>고양이 마을</h1><button id="skip-prologue" type="button" hidden>프롤로그 생략</button></div><button id="replay-prologue" type="button" hidden>프롤로그 다시 보기</button></header>
+  <div id="prologue" class="cinema" aria-label="프롤로그" hidden>
+    <canvas class="cinema-camera" width="384" height="216" aria-label="면접을 보러 가는 길에 뚝섬역에서 내리고 횡단보도를 건너는 장면"></canvas>
+  </div>
+  <div id="departure" class="cinema departure" hidden>
+    <img class="sailing-boat" src="village-ferry.webp" alt="">
+    <div class="ending-line"><p>이번엔, 내가 가고 싶은 곳으로 간다.</p><strong>GAME END</strong></div>
+  </div>
+  <section id="village" aria-label="고양이 마을 지도" tabindex="0" hidden>
+    <button class="gate portal" id="village-exit" type="button" aria-label="마을 입구 소용돌이" hidden></button>
+    <button id="hobby-path" class="map-spot" type="button" aria-label="취미 공간으로 이동" hidden></button>
+    <button id="tool-shed" class="map-spot" type="button" aria-label="공구 창고에서 수리 현황 보기" hidden></button>
+    <button id="home-door" class="map-spot" type="button" aria-label="폐가 들어가기" hidden></button>
+    <button id="home-yard-exit" class="map-spot" type="button" aria-label="폐가 앞마당으로 돌아가기" hidden></button>
+    <div id="home-rooms" hidden></div>
+    <div id="home-furniture" hidden></div>
+    <div id="yard-plots" hidden></div>
+    <button id="loft-entry" class="map-spot" type="button" aria-label="위층 올라가기" hidden>↑</button>
+    <button id="village-interior-exit" class="map-spot" type="button" aria-label="밖으로 나가기" hidden></button>
+    <button id="courtyard-exit" class="map-spot" type="button" aria-label="마당에서 나가기" hidden></button>
+    <button class="place" id="boarding" type="button" hidden>배 타기</button>
+    <span class="place plaza" id="plaza" hidden>광장</span>
+    <div class="village-lighting" aria-hidden="true"></div>
+    <div class="village-weather" aria-hidden="true"></div>
+    <button id="tea-patch" type="button" aria-label="나무에서 찻잎 따기" hidden><i></i><i></i><i></i></button>
+    <span id="bori-hint" hidden>찻잎은 밭 앞 나무에서 따면 돼~</span>
+    <span id="map-sign-art" aria-hidden="true"></span>
+    <button id="map-sign" class="map-spot" type="button" aria-label="마을 지도 보기"></button>
+    <p id="dive-haul" role="status" hidden></p>
+    <div id="dive-controls" hidden></div>
+    <div id="lulu" class="resident" hidden><canvas width="24" height="24" aria-hidden="true"></canvas><span>루루</span></div>
+    <span id="dive-guide-line" class="resident-greeting" role="status" hidden></span>
+    <span id="dive-shark" aria-label="상어" role="img" hidden><i></i><b></b></span>
+    <button id="fountain" class="map-spot" type="button" aria-label="분수에 돌멩이 던지기"></button>
+    <span id="fountain-stone" hidden aria-hidden="true"></span>
+    <span id="fountain-spirit" role="img" aria-label="분수에서 나타난 산신령" hidden><i></i></span>
+    <button id="tea-house" class="map-spot" type="button" aria-label="찻집 들어가기"></button>
+    <button id="town-hall" class="map-spot" type="button" aria-label="회관 들어가기"></button>
+    <button id="cottage" class="map-spot" type="button" aria-label="작은 집 들어가기"></button>
+    <button id="bori" type="button" aria-label="보리에게 다가가기"><canvas width="24" height="24" aria-hidden="true"></canvas><span>보리</span></button>
+    <span id="chichi-waiting" class="resident-greeting" role="status" hidden>빨리 와!</span>
+    <button id="chichi" class="resident" type="button" aria-label="치치에게 다가가기" hidden><canvas width="24" height="24" aria-hidden="true"></canvas><span>치치</span></button>
+    <div id="coco" class="resident"><canvas width="24" height="24" aria-hidden="true"></canvas><span id="coco-name" hidden>코코</span></div>
+    <div id="village-seats" hidden></div>
+    <canvas id="sleeping-player" width="10" height="9" role="img" aria-label="이불을 덮고 누워 쉬는 주인공" hidden></canvas>
+    <canvas id="player" width="16" height="16" aria-hidden="true"></canvas>
+  </section>
+  <dialog id="village-guide" aria-labelledby="guide-title">
+    <h2 id="guide-title">마을 지도</h2>
+    <div id="guide-map"></div>
+    <div class="guide-actions"><button id="guide-back" type="button" hidden>이전 지도</button><form method="dialog"><button>닫기</button></form></div>
+  </dialog>
+  <dialog id="furniture-dialog" aria-labelledby="furniture-title">
+    <h2 id="furniture-title"></h2><p id="furniture-text" aria-live="polite"></p>
+    <button id="furniture-action" type="button"></button>
+    <button id="bed-save" type="button" hidden>저장하기</button>
+    <form method="dialog"><button>닫기</button></form>
+  </dialog>
+  <dialog id="tool-shed-dialog" aria-labelledby="tool-shed-title">
+    <h2 id="tool-shed-title">집 수리</h2>
+    <p>현재 <strong id="shed-level"></strong></p>
+    <h3 id="shed-next"></h3>
+    <ul id="shed-prerequisites"></ul>
+    <p id="shed-materials" aria-live="polite"></p>
+    <button id="shed-upgrade" type="button">외관 수리하기</button>
+    <h3>실내 수리</h3>
+    <ul id="shed-rooms"></ul>
+    <form method="dialog"><button>닫기</button></form>
+  </dialog>
+  <dialog id="home-repair" aria-labelledby="repair-title">
+    <h2 id="repair-title"></h2><p id="repair-description"></p>
+    <button type="button" id="repair-action"></button>
+    <form method="dialog"><button>닫기</button></form>
+  </dialog>
+  <dialog id="village-bag-dialog" aria-labelledby="bag-title"><h2 id="bag-title">가방</h2><p id="bag-empty" hidden>아직 가방이 비어 있어요.</p><dl id="bag-items"></dl><form method="dialog"><button>닫기</button></form></dialog>
+  <dialog id="dive-dialog" aria-labelledby="dive-title">
+    <h2 id="dive-title"></h2><p id="dive-line"></p><button id="dive-ok" type="button">확인</button>
+  </dialog>
+  <dialog id="fortune" aria-labelledby="fortune-title">
+    <h2 id="fortune-title">산신령의 포춘쿠키</h2>
+    <button id="fortune-cookie" type="button" aria-label="포춘쿠키 깨기"><span></span><span></span></button>
+    <p id="fortune-message" aria-live="polite" hidden></p>
+    <form method="dialog"><button>닫기</button></form>
+  </dialog>
+  <dialog id="village-event" aria-labelledby="scene-title"></dialog>
+  <section class="dialogue" id="scene-dialogue" aria-labelledby="scene-title">
+    <h2 id="scene-title" tabindex="-1"></h2>
+    <div aria-live="polite">
+      <div id="speech" class="speech" hidden><strong id="speaker"></strong><p id="speech-line"></p></div>
+      <p id="story"></p>
+    </div>
+    <div id="choices"></div>
+    <p id="save-note" role="status" hidden>이 브라우저에서는 진행을 저장할 수 없어요.</p>
+  </section>
+</main>
+</body>
+</html>
