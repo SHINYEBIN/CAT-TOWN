@@ -392,6 +392,7 @@ function updateTeaConversation(now) {
   if (index >= teaLines.length) {
     teaConversation = undefined;
     teaDialogue.hidden = true;
+    servedTea.hidden = true;
     return;
   }
   const [speaker, line] = teaLines[index];
@@ -441,13 +442,14 @@ function setVillageInterior(room) {
   activeVillageInterior = room;
   teaConversation = undefined;
   teaDialogue.hidden = true;
-  servedTea.hidden = room !== 'tea-house' || !diveMastered;
+  servedTea.hidden = true;
   if (room === 'tea-house' && teaInvitationPending()) {
     villageSave.update({ story: { visitedTeaAfterDive: true } });
     const now = performance.now();
     bori.route = [];
     bori.visit = { door, until: now + 25000, moved: { x: 60, y: 49 } };
     teaConversation = { started: now };
+    servedTea.hidden = false;
   }
   keys.clear();
   route = [];
