@@ -173,7 +173,7 @@ function render() {
   } else if (activeVillageInterior) {
     write(activeVillageInterior === 'tea-house' ? '보리의 찻집' : '작은 집', '아래쪽 출입문으로 걸어가면 마을로 돌아가요.');
   } else if (scene === 'arrival') {
-    write('마을에 도착했다', '방향키로 걷거나 지도를 누르세요. 보리에게 가까이 가거나 근처에서 D를 누르면 대화할 수 있어요.', diveMastered ? '코코' : '낯선 고양이', '광장에 보리가 있어요.\n먼저 인사하러 가볼까요?');
+    write('마을에 도착했다', '방향키·터치로 이동해요.', diveMastered ? '코코' : '낯선 고양이', '광장에서 보리를 만나 봐요.');
     if (villageSave.slots().some(Boolean)) option('저장한 장면 이어하기', () => openSaveSlots('load'));
   } else if (scene === 'introduction') {
     write('보리에게 답하기', '');
@@ -676,6 +676,7 @@ replay.onclick = () => {
 };
 eventDialog.addEventListener('cancel', event => event.preventDefault());
 render();
+void startVillageMusic();
 requestAnimationFrame(tick);
 const villageBackdrops = [
   'village-map.webp', 'village-teahouse.webp', 'village-courtyard.webp', 'village-clearing.webp',

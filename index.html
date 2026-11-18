@@ -4,20 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>고양이 마을 · 플레이 시안</title>
-  <link rel="stylesheet" href="village.css?v=tea-house">
-  <script src="village-save.js?v=tea-house" defer></script>
+  <link rel="stylesheet" href="village.css?v=opening-cues">
+  <script src="village-save.js?v=opening-cues" defer></script>
   <script src="village-sprites.js" defer></script>
-  <script src="village-extras.js?v=tea-house" defer></script>
-  <script src="village-home.js?v=tea-house" defer></script>
+  <script src="village-extras.js?v=opening-cues" defer></script>
+  <script src="village-home.js?v=opening-cues" defer></script>
   <script src="village-dive.js" defer></script>
-  <script src="village-prologue.js" defer></script>
-  <script src="village.js?v=tea-house" defer></script>
+  <script src="village-prologue.js?v=opening-cues" defer></script>
+  <script src="village.js?v=opening-cues" defer></script>
 </head>
 <body>
 <main>
-  <header><div class="village-tools"><span id="seoul-weather"></span><div class="village-tool-buttons"><button id="music" type="button" aria-label="음악 켜기" aria-pressed="false">🔇</button><button id="village-bag" type="button" aria-label="가방 열기" title="가방">🎒</button></div></div><span id="chapter"></span><div class="village-heading"><h1>고양이 마을</h1><button id="skip-prologue" type="button" hidden>프롤로그 생략</button></div><button id="replay-prologue" type="button" hidden>프롤로그 다시 보기</button></header>
+  <header><div class="village-tools"><span id="seoul-weather"></span><div class="village-tool-buttons"><button id="music" type="button" aria-label="음악 켜기" aria-pressed="false">🔇</button><button id="village-bag" type="button" aria-label="가방 열기" title="가방">🎒</button></div></div><span id="chapter"></span><div class="village-heading"><h1>고양이 마을</h1><button id="skip-prologue" type="button" hidden>프롤로그 생략</button><button id="replay-prologue" type="button" hidden>프롤로그 다시 보기</button></div></header>
   <div id="prologue" class="cinema" aria-label="프롤로그" hidden>
     <canvas class="cinema-camera" width="384" height="216" aria-label="면접을 보러 가는 길에 뚝섬역에서 내리고 횡단보도를 건너는 장면"></canvas>
+    <button id="opening-with-sound" type="button" hidden>소리와 함께 처음부터</button>
   </div>
   <div id="departure" class="cinema departure" hidden>
     <img class="sailing-boat" src="village-ferry.webp" alt="">

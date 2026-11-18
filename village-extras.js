@@ -166,24 +166,35 @@ let audioContext;
 let musicVolume;
 let noteTimer;
 let noteIndex = 0;
-const melody = [67, 71, 74, 76, 74, 71, 69, 67, 64, 67, 71, 74, 72, 69, 67, 62];
+const villageTune = [
+  [48, 72], [76], [79], [], [55, 76], [74], [72], [],
+  [45, 69], [72], [76], [], [52, 74], [72], [69], [],
+  [41, 65], [69], [72], [], [48, 76], [74], [72], [],
+  [43, 67], [71], [74], [76], [55, 74], [71], [72], []
+];
 function playVillageNote() {
-  const oscillator = audioContext.createOscillator();
-  const envelope = audioContext.createGain();
+  const notes = villageTune[noteIndex++ % villageTune.length];
   const now = audioContext.currentTime;
-  oscillator.type = 'sine';
-  oscillator.frequency.value = 440 * 2 ** ((melody[noteIndex++ % melody.length] - 69) / 12);
-  envelope.gain.setValueAtTime(.001, now);
-  envelope.gain.exponentialRampToValueAtTime(.45, now + .025);
-  envelope.gain.exponentialRampToValueAtTime(.001, now + .66);
-  oscillator.connect(envelope).connect(musicVolume);
-  oscillator.start(now);
-  oscillator.stop(now + .7);
+  for (const note of notes) {
+    const pitch = 440 * 2 ** ((note - 69) / 12);
+    for (const [ratio, gain, decay] of [[1, note < 60 ? .28 : .34, 1.15], [2.76, .042, .23]]) {
+      const oscillator = audioContext.createOscillator();
+      const envelope = audioContext.createGain();
+      oscillator.frequency.value = pitch * ratio;
+      envelope.gain.setValueAtTime(.001, now);
+      envelope.gain.exponentialRampToValueAtTime(gain, now + .012);
+      envelope.gain.exponentialRampToValueAtTime(.001, now + decay);
+      oscillator.connect(envelope).connect(musicVolume);
+      oscillator.onended = () => envelope.disconnect();
+      oscillator.start(now);
+      oscillator.stop(now + decay);
+    }
+  }
 }
 function showMusicState() {
-  musicButton.textContent = noteTimer ? '♪' : '🔇';
-  musicButton.setAttribute('aria-label', noteTimer ? '음악 끄기' : '음악 켜기');
-  musicButton.setAttribute('aria-pressed', String(Boolean(noteTimer)));
+  musicButton.textContent = wantsMusic ? '♪' : '🔇';
+  musicButton.setAttribute('aria-label', wantsMusic ? '소리 끄기' : '소리 켜기');
+  musicButton.setAttribute('aria-pressed', String(wantsMusic));
 }
 async function startVillageMusic() {
   if (!wantsMusic || noteTimer || !window.AudioContext) return;
@@ -197,7 +208,7 @@ async function startVillageMusic() {
   if (!wantsMusic || noteTimer || !document.querySelector('#prologue').hidden) return;
   musicVolume.gain.value = .1;
   playVillageNote();
-  noteTimer = setInterval(playVillageNote, 520);
+  noteTimer = setInterval(playVillageNote, 390);
   showMusicState();
 }
 function pauseVillageMusic() {
@@ -209,10 +220,14 @@ function pauseVillageMusic() {
 musicButton.onclick = () => {
   wantsMusic = !wantsMusic;
   villageSave.update({ preferences: { music: wantsMusic } });
+  showMusicState();
   if (wantsMusic) void startVillageMusic();
-  else pauseVillageMusic();
+  else {
+    pauseVillageMusic();
+    stopOpeningAudio();
+  }
 };
-for (const type of ['pointerdown', 'keydown']) {
+for (const type of ['pointerdown', 'pointerup', 'keydown']) {
   document.addEventListener(type, event => {
     if (!event.target.closest?.('#music')) void startVillageMusic();
   });
