@@ -78,7 +78,11 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
   border: 0; box-shadow: none; background: transparent;
 }
 #village #bori canvas, #village .resident canvas { position: static; transform: none; }
-#bori span, .resident span { padding: 0 5px; background: #433224; font-size: .75rem; }
+#bori > span, .resident > span {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  color: #fff9df; font-size: .7rem; font-weight: 700; line-height: 1.1;
+  white-space: nowrap; text-shadow: 0 1px 2px #18120b, 1px 0 #18120b, -1px 0 #18120b;
+}
 
 .cinema {
   position: relative; isolation: isolate; overflow: hidden;
@@ -88,7 +92,23 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
 }
 .cinema-camera { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 #prologue { background: #080c10; }
-#opening-with-sound { position: absolute; z-index: 1; right: 8px; bottom: 8px; font-size: .78rem; padding: 5px 8px; }
+#opening-with-sound {
+  position: absolute; z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: .9rem; padding: 7px 12px; white-space: nowrap;
+}
+@media (max-width: 600px) {
+  #village {
+    margin-inline: -8px; border-width: 3px;
+    aspect-ratio: 6 / 5;
+  }
+  #village canvas { width: clamp(34px, 10vw, 48px); }
+  #village .resident-greeting, #village #bori-hint { margin-top: -13px; }
+}
+@media (hover: none) and (pointer: coarse) {
+  body { -webkit-tap-highlight-color: transparent; }
+  .touch-input :is(button, #village, #scene-title):focus-visible { outline: none; }
+  .touch-input .map-spot:focus-visible { background: transparent; }
+}
 #village.dock-map, .departure {
   background: url('village-cinema.webp') right bottom / 200% 200% no-repeat;
   aspect-ratio: 16 / 9; image-rendering: auto;

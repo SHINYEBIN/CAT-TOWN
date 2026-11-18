@@ -2,8 +2,8 @@ const openingCanvas = document.querySelector('#prologue canvas');
 const openingArt = openingCanvas.getContext('2d');
 const openingSoundButton = document.querySelector('#opening-with-sound');
 openingSoundButton.onclick = async () => {
-  await startVillageMusic();
-  if (!prologue.hidden && audioContext?.state === 'running') playOpening();
+  if (wantsMusic) await startVillageMusic();
+  if (!prologue.hidden) playOpening(true);
 };
 let openingFrame;
 const openingSounds = new Set();
@@ -173,14 +173,26 @@ function stopPrologue() {
   stopOpeningAudio();
 }
 
-function playOpening() {
+function playOpening(fromButton = false) {
   stopPrologue();
   pauseVillageMusic();
-  const started = performance.now();
+  let started;
   let cueIndex = 0;
+  let waitingForButton = false;
+  drawStation(0);
   function frame(time) {
+    if (started === undefined) {
+      waitingForButton ||= !fromButton && wantsMusic && audioContext?.state === 'suspended';
+      if (waitingForButton) {
+        openingSoundButton.textContent = wantsMusic ? '소리와 함께 시작' : '프롤로그 시작';
+        openingSoundButton.hidden = false;
+        openingFrame = requestAnimationFrame(frame);
+        return;
+      }
+      started = time;
+    }
     const seconds = (time - started) / 1000;
-    openingSoundButton.hidden = !wantsMusic || !audioContext || audioContext.state === 'running';
+    openingSoundButton.hidden = true;
     if (seconds >= 8.9) { finishPrologue(true); return; }
     while (cueIndex < openingCues.length && seconds >= openingCues[cueIndex][0]) {
       const [at, effect] = openingCues[cueIndex++];

@@ -676,6 +676,10 @@ replay.onclick = () => {
 };
 eventDialog.addEventListener('cancel', event => event.preventDefault());
 render();
+document.addEventListener('pointerdown', event => {
+  document.body.classList.toggle('touch-input', event.pointerType === 'touch');
+}, true);
+document.addEventListener('keydown', () => document.body.classList.remove('touch-input'), true);
 void startVillageMusic();
 requestAnimationFrame(tick);
 const villageBackdrops = [
