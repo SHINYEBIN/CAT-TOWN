@@ -582,7 +582,7 @@ function resumeSlot(index) {
   restored.repairs.rooms.forEach(id => repairedRooms.add(id));
   diveMastered = saved.diveComplete;
   luluBriefed = saved.luluBriefed;
-  diveProgress = diveMastered && luluBriefed ? 'complete' : 'none';
+  diveProgress = savedDiveProgress();
   diveMaterials = { ...restored.inventory };
   go(saved.scene, saved.party);
   if (restored.checkpoint === 'bed') {

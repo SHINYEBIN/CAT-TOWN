@@ -52,7 +52,11 @@ function makeDivePickups() {
 const savedDive = villageSave.read();
 let diveMastered = savedDive.story.diveComplete;
 let luluBriefed = savedDive.story.luluBriefed;
-let diveProgress = diveMastered && luluBriefed ? 'complete' : 'none';
+let diveProgress = savedDiveProgress();
+function savedDiveProgress() {
+  if (diveMastered) return 'complete';
+  return luluBriefed ? 'ready' : 'none';
+}
 let diveMaterials = { ...savedDive.inventory };
 let inDive = false;
 let sharkChasing = false;
@@ -72,6 +76,10 @@ function resetDive() {
   saveDive();
 }
 function prepareLuluDiveGuide(onReturn = false) {
+  if (diveMastered || luluBriefed) {
+    diveProgress = savedDiveProgress();
+    return;
+  }
   if (!onReturn && ['waiting', 'leading', 'ready'].includes(diveProgress)) return;
   diveProgress = 'waiting';
   if (lulu.visit) restoreResidentToVillage(lulu, performance.now());
