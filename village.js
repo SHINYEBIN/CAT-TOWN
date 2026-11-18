@@ -36,10 +36,7 @@ const chichiContext = chichiButton.querySelector('canvas').getContext('2d');
 const teaPatch = { x: 45, y: 61 };
 const teaButton = document.querySelector('#tea-patch');
 const boriScenes = ['arrival', 'tea-return'];
-const initialStory = villageSave.saved().story;
 let returnedFromClearing = false;
-let savedProgress = initialStory.scene && initialStory.scene !== 'arrival' ? initialStory : undefined;
-const savedAtBed = villageSave.saved().checkpoint === 'bed';
 let state = { scene: 0, party: null };
 let position = { ...start };
 let target = null;
@@ -71,7 +68,7 @@ function go(scene, party = state.party, guideFromHere = false) {
     if (scene === 'follow-chichi' && returnedFromClearing && !chichiAtPlaza) setChichiAtPlaza(true);
     if (scene === 'clearing') markChichiGuided(true);
     if (scene === 'find-chichi') setChichiAtPlaza(false);
-    if (scene !== 'arrival' || !savedProgress) villageSave.update({ story: state });
+    villageSave.update({ story: state });
   }
 
   homeLocation = 'front';
@@ -177,26 +174,7 @@ function render() {
     write(activeVillageInterior === 'tea-house' ? '보리의 찻집' : '작은 집', '아래쪽 출입문으로 걸어가면 마을로 돌아가요.');
   } else if (scene === 'arrival') {
     write('마을에 도착했다', '방향키로 걷거나 지도를 누르세요. 보리에게 가까이 가거나 근처에서 D를 누르면 대화할 수 있어요.', diveMastered ? '코코' : '낯선 고양이', '광장에 보리가 있어요.\n먼저 인사하러 가볼까요?');
-    if (savedProgress) option('저장한 장면 이어하기', () => {
-      const saved = savedProgress;
-      savedProgress = undefined;
-      villageSave.resume();
-      const restored = villageSave.read();
-      returnedFromClearing = saved.returnedFromClearing;
-      chichiAtPlaza = saved.chichiAtPlaza;
-      chichiGuidedHome = saved.chichiGuided;
-      homeLevel = restored.repairs.level;
-      restored.repairs.rooms.forEach(id => repairedRooms.add(id));
-      diveMastered = saved.diveComplete;
-      luluBriefed = saved.luluBriefed;
-      diveProgress = diveMastered && luluBriefed ? 'complete' : 'none';
-      diveMaterials = { ...restored.inventory };
-      go(saved.scene, saved.party);
-      if (savedAtBed && saved.scene === 'clearing') {
-        changeHomeLocation('home');
-        position = { x: 34, y: 38 };
-      }
-    });
+    if (villageSave.slots().some(Boolean)) option('저장한 장면 이어하기', () => openSaveSlots('load'));
   } else if (scene === 'introduction') {
     write('보리에게 답하기', '');
     option('A. 나는 인간이야. 여기는 어디야?', () => go('tea-request', 'honest'));
@@ -403,7 +381,7 @@ function tick(now) {
   requestAnimationFrame(tick);
   const elapsed = Math.min(now - lastFrame, 40) / 1000;
   lastFrame = now;
-  if (map.hidden || fountainRitual || diveDialog.open || bagDialog.open || eventDialog.open || fortuneDialog.open || villageGuide.open || furnitureDialog.open || toolShedDialog.open || homeRepairDialog.open) return;
+  if (map.hidden || fountainRitual || document.querySelector('dialog[open]')) return;
   if (inDive) {
     updateDiveMotion(elapsed);
   } else if (state.scene === 'clearing' && homeLocation === 'front' && !chichiAtPlaza) {
@@ -436,13 +414,8 @@ function tick(now) {
     }
     if (afterLuluHomeGuide()) updateLuluDiveGuide(now, elapsed);
     walkVillageResident(coco, cocoSprite, cocoContext, 'coco', now, elapsed, false);
-    if (teaInvitationPending()) {
-      boriButton.hidden = false;
-      moveResident(bori, boriButton, boriContext, 'bori', now, elapsed, false);
-      const hint = document.querySelector('#bori-hint');
-      hint.hidden = diveDialog.open;
-      hint.textContent = '찻집에서 차 마시러 올래?\n찻집에서 만나!';
-    } else {
+    if (teaInvitationPending()) updateBoriTeaInvitation(now, elapsed);
+    else {
       walkVillageResident(bori, boriButton, boriContext, 'bori', now, elapsed, target === bori || distanceTo(bori) < 10 || state.scene === 'tea-pick');
     }
     updateBoriHint(bori);
@@ -519,7 +492,6 @@ function distanceTo(point) {
   return Math.hypot(position.x - point.x, position.y - point.y);
 }
 function talkToBori() {
-  savedProgress = undefined;
   go(state.scene === 'tea-return' ? 'welcome' : 'introduction');
 }
 teaButton.style.left = teaPatch.x + '%';
@@ -550,6 +522,74 @@ document.querySelector('#boarding').onclick = () => walkTo(dock);
 function dialogChoices(dialog) {
   return [...dialog.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
 }
+const saveSlotsDialog = document.querySelector('#save-slots');
+const slotActions = document.querySelector('#save-slots-actions');
+const slotMessage = document.querySelector('#save-slots-message');
+const slotDate = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Seoul' });
+function slotButton(label, action, disabled = false) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.disabled = disabled;
+  button.onclick = action;
+  slotActions.append(button);
+}
+function openSaveSlots(mode) {
+  document.querySelector('#save-slots-title').textContent = mode === 'save' ? '저장하기' : '이어하기';
+  slotMessage.hidden = true;
+  slotActions.replaceChildren();
+  function confirmAction(message, label, action) {
+    slotMessage.textContent = message;
+    slotMessage.hidden = false;
+    slotActions.replaceChildren();
+    slotButton('돌아가기', () => openSaveSlots(mode));
+    slotButton(label, action);
+    dialogChoices(saveSlotsDialog)[0]?.focus();
+  }
+  villageSave.slots().forEach((slot, index) => {
+    const summary = slot ? (slot.savedAt ? slotDate.format(slot.savedAt) : '이전 저장') + ' · 집 ' + slot.data.repairs.level + '단계' : '빈 슬롯';
+    const save = () => {
+      if (!villageSave.saveAtBed(index)) {
+        slotMessage.textContent = '저장하지 못했어요.';
+        slotMessage.hidden = false;
+        return;
+      }
+      saveSlotsDialog.close();
+      document.querySelector('#furniture-text').textContent = (index + 1) + '번 슬롯에 저장했어요.';
+      bedSaveButton.focus();
+    };
+    slotButton((index + 1) + '번 슬롯 · ' + summary, () => {
+      if (mode === 'load') resumeSlot(index);
+      else if (slot) confirmAction('이 슬롯의 진행을 덮어쓸까요?', '덮어쓰기', save);
+      else save();
+    }, mode === 'load' && !slot);
+  });
+  if (mode === 'save') slotButton('새 게임', () =>
+    confirmAction('저장하지 않은 진행은 사라져요. 새 게임을 시작할까요?', '새 게임 시작', () => location.reload()));
+  if (!saveSlotsDialog.open) saveSlotsDialog.showModal();
+  dialogChoices(saveSlotsDialog)[0]?.focus();
+}
+function resumeSlot(index) {
+  const restored = villageSave.resume(index);
+  if (!restored) return;
+  saveSlotsDialog.close();
+  const saved = restored.story;
+  returnedFromClearing = saved.returnedFromClearing;
+  chichiAtPlaza = saved.chichiAtPlaza;
+  chichiGuidedHome = saved.chichiGuided;
+  homeLevel = restored.repairs.level;
+  repairedRooms.clear();
+  restored.repairs.rooms.forEach(id => repairedRooms.add(id));
+  diveMastered = saved.diveComplete;
+  luluBriefed = saved.luluBriefed;
+  diveProgress = diveMastered && luluBriefed ? 'complete' : 'none';
+  diveMaterials = { ...restored.inventory };
+  go(saved.scene, saved.party);
+  if (restored.checkpoint === 'bed') {
+    changeHomeLocation('home');
+    position = { x: 34, y: 38 };
+  }
+}
 const dialogFocus = new MutationObserver(changes => {
   for (const { target: dialog } of changes) {
     if (dialog.open) {
@@ -573,7 +613,7 @@ for (const dialog of document.querySelectorAll('dialog')) {
   });
 }
 window.addEventListener('keydown', event => {
-  if (map.hidden || fountainRitual || diveDialog.open || bagDialog.open || eventDialog.open || fortuneDialog.open || villageGuide.open || furnitureDialog.open || toolShedDialog.open || homeRepairDialog.open || event.altKey || event.metaKey || event.ctrlKey) return;
+  if (map.hidden || fountainRitual || document.querySelector('dialog[open]') || event.altKey || event.metaKey || event.ctrlKey) return;
   if (event.code === 'KeyD' && !event.repeat && !inDive && activateVillageSpot(fountain)) { event.preventDefault(); return; }
   if (event.code === 'KeyD' && !activeVillageInterior && !inCourtyard && !event.repeat && canAskChichiForGuide() && distanceTo(chichi) <= 9) {
     event.preventDefault();
@@ -637,3 +677,21 @@ replay.onclick = () => {
 eventDialog.addEventListener('cancel', event => event.preventDefault());
 render();
 requestAnimationFrame(tick);
+const villageBackdrops = [
+  'village-map.webp', 'village-teahouse.webp', 'village-courtyard.webp', 'village-clearing.webp',
+  'village-old-home.webp', 'village-cottage.webp', 'village-underwater.webp', 'village-hobby.webp',
+  ...homeLevels.map(level => level.image), 'village-loft.webp', 'village-cinema.webp'
+];
+const villageImageCache = [];
+async function warmVillageBackdrops() {
+  const paths = [...new Set(villageBackdrops)];
+  for (let offset = 0; offset < paths.length; offset += 3) {
+    await Promise.allSettled(paths.slice(offset, offset + 3).map(path => {
+      const image = new Image();
+      image.src = path;
+      villageImageCache.push(image);
+      return image.decode();
+    }));
+  }
+}
+void warmVillageBackdrops();

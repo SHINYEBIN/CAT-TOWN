@@ -311,8 +311,7 @@ function hideResidentGreeting() {
   greetingBubble.hidden = true;
 }
 function updateResidentGreeting(now) {
-  if (eventDialog.open || fortuneDialog.open || villageGuide.open || furnitureDialog.open ||
-      toolShedDialog.open || homeRepairDialog.open || inDive || homeLocation !== 'front') {
+  if (document.querySelector('dialog[open]') || inDive || homeLocation !== 'front' || teaConversation) {
     hideResidentGreeting();
     return;
   }
@@ -321,7 +320,7 @@ function updateResidentGreeting(now) {
     { id: 'lulu', actor: lulu, element: luluElement, busy: diveProgress !== 'complete' },
     { id: 'bori', actor: inside ? bori.visit?.moved ?? bori : bori, element: boriButton, busy: teaInvitationPending() || !boriGreetingScenes.has(state.scene) },
     { id: 'chichi', actor: state.scene === 'clearing' ? { x: 31, y: 68 } : inside ? chichi.visit?.moved ?? chichi : chichi,
-      element: chichiButton, busy: !chichiGreetingScenes.has(state.scene) || !chichiGuidedHome || state.scene === 'follow-chichi' && !chichiAtPlaza }
+      element: chichiButton, busy: !chichiWaiting.hidden || !chichiGreetingScenes.has(state.scene) || !chichiGuidedHome || state.scene === 'follow-chichi' && !chichiAtPlaza }
   ];
   if (speaking && now >= greetingUntil) hideResidentGreeting();
   const eligible = [];
@@ -357,8 +356,64 @@ function updateResidentGreeting(now) {
 }
 
 let activeVillageInterior = null;
+let teaConversation;
+const teaDialogue = document.createElement('span');
+teaDialogue.className = 'resident-greeting';
+teaDialogue.setAttribute('role', 'status');
+teaDialogue.hidden = true;
+const servedTea = document.createElement('span');
+servedTea.className = 'served-tea';
+servedTea.hidden = true;
+servedTea.setAttribute('aria-label', '보리가 내어 준 차');
+document.querySelector('#village').append(teaDialogue, servedTea);
+const teaLines = [
+  ['bori', '어서 와! 차 준비해 뒀어.\n코코 옆에 앉아.'],
+  ['coco', '보리, 얘는 누구야?'],
+  ['bori', '우리 마을에서 잠깐 지내게 됐어.\n아직 낯설 테니까 잘 부탁해, 코코.']
+];
+function updateTeaConversation(now) {
+  if (!teaConversation) return;
+  const index = Math.floor((now - teaConversation.started) / 3700);
+  if (index >= teaLines.length) {
+    teaConversation = undefined;
+    teaDialogue.hidden = true;
+    return;
+  }
+  const [speaker, line] = teaLines[index];
+  const actor = speaker === 'coco' ? cocoTeaSeat.cushion : bori.visit.moved;
+  teaDialogue.style.left = actor.x + '%';
+  teaDialogue.style.top = (actor.y - 13) + '%';
+  if (teaDialogue.textContent !== line) teaDialogue.textContent = line;
+  teaDialogue.hidden = false;
+}
 function teaInvitationPending() {
   return diveMastered && !villageSave.read().story.visitedTeaAfterDive;
+}
+let boriTeaDeparture;
+function updateBoriTeaInvitation(now, elapsed) {
+  const hint = document.querySelector('#bori-hint');
+  if (bori.visit?.door.id === 'tea-house') {
+    boriButton.hidden = true;
+    hint.hidden = true;
+    return;
+  }
+  if (diveDialog.open) { hint.hidden = true; return; }
+  const door = villageSpots.find(spot => spot.id === 'tea-house');
+  boriButton.hidden = false;
+  if (boriTeaDeparture === undefined) {
+    boriTeaDeparture = now + 2600;
+    bori.visit = null;
+    bori.visitDoor = null;
+    bori.route = findRoute(door, bori);
+  }
+  const walking = now >= boriTeaDeparture;
+  hint.hidden = walking;
+  hint.textContent = '찻집에서 차 마시러 올래?\n찻집에서 만나!';
+  moveResident(bori, boriButton, boriContext, 'bori', now, elapsed, walking, 24);
+  if (walking && !bori.route.length) {
+    bori.visit = { door, until: Infinity, moved: { x: 50, y: 58 } };
+    boriButton.hidden = true;
+  }
 }
 const villageInteriorExit = { x: 50, y: 89 };
 const villageInteriorExitButton = document.querySelector('#village-interior-exit');
@@ -369,8 +424,15 @@ function setVillageInterior(room) {
   standFromVillageSeat();
   const door = villageSpots.find(spot => spot.id === (room ?? activeVillageInterior));
   activeVillageInterior = room;
+  teaConversation = undefined;
+  teaDialogue.hidden = true;
+  servedTea.hidden = room !== 'tea-house' || !diveMastered;
   if (room === 'tea-house' && teaInvitationPending()) {
     villageSave.update({ story: { visitedTeaAfterDive: true } });
+    const now = performance.now();
+    bori.route = [];
+    bori.visit = { door, until: now + 25000, moved: { x: 60, y: 49 } };
+    teaConversation = { started: now };
   }
   keys.clear();
   route = [];
@@ -437,7 +499,8 @@ function renderVillageSeats() {
     const button = document.createElement('button');
     button.className = 'village-seat';
     button.type = 'button';
-    button.setAttribute('aria-label', '방석에 앉기');
+    button.setAttribute('aria-label', activeVillageInterior === 'tea-house' && diveMastered &&
+      seat === seatsByBuilding['tea-house'][6] ? '코코 옆에 앉기' : '방석에 앉기');
     button.style.left = seat.cushion.x + '%';
     button.style.top = seat.cushion.y + '%';
     button.onclick = () => {
@@ -532,6 +595,10 @@ function updateVisitingResidents(now, elapsed) {
     const visit = actor.visit;
     element.hidden = !eligible || !visit || visit.door.id !== room;
     if (element.hidden) continue;
+    if (id === 'bori' && teaConversation) {
+      moveResident(visit.moved, element, context, id, now, elapsed, false);
+      continue;
+    }
     if (now < visit.until) {
       stroll(visit.moved, element, context, id, now, elapsed, false, options.points);
     } else {
@@ -546,4 +613,5 @@ function updateVisitingResidents(now, elapsed) {
       }
     }
   }
+  updateTeaConversation(now);
 }

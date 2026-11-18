@@ -1,5 +1,5 @@
 const villageSave = (() => {
-  const key = 'cat-village-save';
+  const key = 'cat-village-slots';
   const version = 1;
   const scenes = ['arrival', 'introduction', 'tea-request', 'tea-pick', 'tea-return', 'welcome', 'morning', 'find-chichi', 'follow-chichi', 'clearing', 'gate', 'return-walk', 'dock', 'return', 'stay'];
   const parties = ['moon', 'morning', 'honest', 'lost', 'joke'];
@@ -47,18 +47,21 @@ const villageSave = (() => {
       preferences: { music: read('cat-village-music') !== 'off' }
     });
   }
-  const raw = read(key);
-  const existing = parse(raw);
-  const unsupported = existing?.version != null && existing.version !== version;
-  let data = raw === null ? readLegacy() : normalize(existing);
-  let checkpoint = normalize(data);
-  let migrated = raw === null;
-  function persist(snapshot) {
+  const previous = parse(read('cat-village-save'));
+  const legacy = previous?.version === version ? normalize(previous) : readLegacy();
+  const migratedSlot = legacy.story.scene && legacy.story.scene !== 'arrival' ? { data: legacy, savedAt: null } : null;
+  function readStore() {
+    const store = parse(read(key));
+    return store ?? { version, preferences: legacy.preferences, slots: [migratedSlot, null, null] };
+  }
+  const initial = readStore();
+  let data = normalize({ preferences: initial.preferences });
+  function persist(store) {
     let ok = false;
+    const unsupported = store.version !== version;
     try {
       if (!unsupported) {
-        localStorage.setItem(key, JSON.stringify(snapshot));
-        checkpoint = snapshot;
+        localStorage.setItem(key, JSON.stringify(store));
         ok = true;
       }
     } catch {}
@@ -68,21 +71,32 @@ const villageSave = (() => {
   function update(parts) {
     for (const [name, values] of Object.entries(parts)) data[name] = { ...data[name], ...values };
     data = normalize(data);
-    if (parts.preferences) persist(normalize({ ...checkpoint, preferences: data.preferences }));
+    if (parts.preferences) persist({ ...readStore(), preferences: data.preferences });
   }
-  if (!unsupported && data.repairs.steps) {
-    data.repairs.steps = false;
-    data.inventory.wood = Math.min(Number.MAX_SAFE_INTEGER, data.inventory.wood + 1);
-    data.inventory.stone = Math.min(Number.MAX_SAFE_INTEGER, data.inventory.stone + 1);
-    migrated = true;
+  function slots() {
+    const store = readStore();
+    return Array.from({ length: 3 }, (_, index) => store.version === version ? store.slots?.[index] ?? null : null);
   }
-  if (migrated) persist(normalize(data));
-  data = normalize({ preferences: checkpoint.preferences });
   return {
     read: () => normalize(data),
-    saved: () => normalize(checkpoint),
-    resume: () => { data = normalize(checkpoint); },
+    slots,
+    resume(index) {
+      const slot = slots()[index];
+      if (!slot) return null;
+      data = normalize({ ...slot.data, preferences: data.preferences });
+      if (data.repairs.steps) {
+        data.repairs.steps = false;
+        for (const id of ['wood', 'stone']) data.inventory[id] = Math.min(Number.MAX_SAFE_INTEGER, data.inventory[id] + 1);
+      }
+      return normalize(data);
+    },
     update,
-    saveAtBed: () => persist(normalize({ ...data, checkpoint: 'bed' }))
+    saveAtBed(index) {
+      if (![0, 1, 2].includes(index) || data.story.scene !== 'clearing') return false;
+      const store = readStore();
+      const next = slots();
+      next[index] = { data: normalize({ ...data, checkpoint: 'bed' }), savedAt: Date.now() };
+      return persist({ ...store, slots: next });
+    }
   };
 })();

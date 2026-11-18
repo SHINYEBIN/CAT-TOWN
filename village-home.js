@@ -119,8 +119,7 @@ function useFurniture(item) {
 }
 bedSaveButton.onclick = () => {
   if (homeLocation !== 'home' || !isBesideBed()) return;
-  const ok = villageSave.saveAtBed();
-  document.querySelector('#furniture-text').textContent = ok ? '저장했어요. 다음에 침대 옆에서 이어할 수 있어요.' : '저장하지 못했어요.';
+  openSaveSlots('save');
 };
 furnitureDialog.addEventListener('close', () => map.focus({ preventScroll: true }));
 
