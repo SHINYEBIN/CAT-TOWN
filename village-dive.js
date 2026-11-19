@@ -132,7 +132,16 @@ function makeDiveControl(point, text = '') {
   button.setAttribute('aria-label', point.label);
   button.style.left = point.x + '%';
   button.style.top = point.y + '%';
-  button.onclick = () => walkTo(point);
+  button.onclick = () => {
+    if (point === pondControl && canDiveHere()) {
+      const shore = { x: 69, y: 73 };
+      if (nearPondShore()) enterDive();
+      else {
+        walkTo(shore);
+        target = pondControl;
+      }
+    } else walkTo(point);
+  };
   diveControls.append(button);
 }
 const pondControl = { ...pond, id: 'pond', label: '연못에서 잠수하기' };
@@ -253,7 +262,7 @@ function finishDiveApproach() {
   }
 }
 function finishPondApproach() {
-  if (target === pondControl && canDiveHere() && distanceTo(pond) <= 3) { enterDive(); return true; }
+  if (target === pondControl && canDiveHere() && nearPondShore()) { enterDive(); return true; }
   return false;
 }
 function useDiveInteraction() {

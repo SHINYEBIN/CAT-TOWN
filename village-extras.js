@@ -5,24 +5,46 @@ const mapSign = { id: 'map-sign', x: 68, y: 37 };
 const noticeBoard = { id: 'notice-board', x: 77, y: 37 };
 const fountain = { id: 'fountain', x: 54, y: 61 };
 const cottage = { id: 'cottage', x: 89, y: 68, title: '작은 집', description: '창가에 햇살이 들고 작은 방석이 놓여 있어요.' };
+const newResidents = [
+  { id: 'mochi', x: 40, y: 64, paths: [{ x: 34, y: 61 }, { x: 43, y: 53 }, { x: 45, y: 73 }], line: '배고파? 잘됐다! 나도 배고파. 같이 먹자!\n난 마을에서 카페 겸 식당을 해.' },
+  { id: 'shrine-cat', x: 70, y: 49, paths: [{ x: 64, y: 45 }, { x: 76, y: 45 }, { x: 73, y: 59 }], line: '나는 이 마을에서 산신령을 모시고 있어.' }
+];
+for (const resident of newResidents) {
+  resident.element = document.getElementById(resident.id);
+  resident.context = resident.element.querySelector('canvas').getContext('2d');
+}
+const newResidentSpeech = document.querySelector('#new-resident-speech');
+let newResidentSpeechTimer;
+let speakingResident;
+function updateNewResidents(now, elapsed) {
+  for (const resident of newResidents) {
+    resident.element.hidden = false;
+    stroll(resident, resident.element, resident.context, resident.id, now, elapsed,
+      target === resident || (!newResidentSpeech.hidden && speakingResident === resident), resident.paths);
+  }
+}
 const villageSpots = [
   fountain,
   mapSign,
   noticeBoard,
   { id: 'tea-house', x: 26, y: 40, title: '보리의 찻집', description: '따뜻한 물이 끓고 찻잎 향이 퍼져요.' },
   { id: 'town-hall', x: 58, y: 33, title: '마을 회관', description: '보리가 적어둔 환영회 일정표가 걸려 있어요.' },
-  cottage
+  cottage,
+  ...newResidents
 ];
 for (const spot of villageSpots) {
   const button = document.getElementById(spot.id);
   button.style.left = spot.x + '%';
   button.style.top = spot.y + '%';
-  button.onclick = () => walkTo(spot);
+  button.onclick = () => {
+    if (!newResidents.includes(spot) || !activateVillageSpot(spot)) walkTo(spot);
+  };
 }
 function updateVillageSpots(atDock) {
   for (const spot of villageSpots) document.getElementById(spot.id).hidden = atDock;
   document.querySelector('#map-sign-art').hidden = atDock;
   document.querySelector('#notice-board-art').hidden = atDock;
+  newResidentSpeech.hidden = true;
 }
 function updateBoriHint(actor) {
   const hint = document.querySelector('#bori-hint');
@@ -38,7 +60,18 @@ function activateVillageSpot(spot) {
   keys.clear();
   route = [];
   target = null;
-  if (spot === mapSign) {
+  if (newResidents.includes(spot)) {
+    clearTimeout(newResidentSpeechTimer);
+    hideResidentGreeting();
+    speakingResident = spot;
+    newResidentSpeech.textContent = spot.id === 'shrine-cat' && villageSave.read().story.lostScarf === 'returned'
+      ? '여기서 지내다 네 마음의 빛을 찾으면, 돌아가는 길도 보일 거야.'
+      : spot.line;
+    newResidentSpeech.style.left = spot.x + '%';
+    newResidentSpeech.style.top = 'calc(' + spot.y + '% - var(--village-character-size))';
+    newResidentSpeech.hidden = false;
+    newResidentSpeechTimer = setTimeout(() => { newResidentSpeech.hidden = true; }, 6200);
+  } else if (spot === mapSign) {
     openVillageGuide();
   } else if (spot === noticeBoard) {
     openNoticeBoard();
@@ -359,7 +392,7 @@ function hideResidentGreeting() {
   greetingBubble.hidden = true;
 }
 function updateResidentGreeting(now) {
-  if (document.querySelector('dialog[open]') || inDive || homeLocation !== 'front' || teaConversation) {
+  if (document.querySelector('dialog[open]') || inDive || homeLocation !== 'front' || teaConversation || !newResidentSpeech.hidden) {
     hideResidentGreeting();
     return;
   }

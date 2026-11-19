@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>고양이 마을 · 플레이 시안</title>
-  <link rel="stylesheet" href="village.css?v=pond-board">
-  <script src="village-save.js?v=pond-board" defer></script>
-  <script src="village-sprites.js" defer></script>
-  <script src="village-extras.js?v=pond-board" defer></script>
-  <script src="village-home.js?v=pond-board" defer></script>
-  <script src="village-dive.js?v=pond-board" defer></script>
-  <script src="village-prologue.js?v=pond-board" defer></script>
-  <script src="village.js?v=pond-board" defer></script>
+  <link rel="stylesheet" href="village.css?v=tools-touch">
+  <script src="village-save.js?v=tools-touch" defer></script>
+  <script src="village-sprites.js?v=tools-touch" defer></script>
+  <script src="village-extras.js?v=tools-touch" defer></script>
+  <script src="village-home.js?v=tools-touch" defer></script>
+  <script src="village-dive.js?v=tools-touch" defer></script>
+  <script src="village-prologue.js?v=tools-touch" defer></script>
+  <script src="village.js?v=tools-touch" defer></script>
 </head>
 <body>
 <main>
@@ -42,9 +42,9 @@
     <div class="village-weather" aria-hidden="true"></div>
     <button id="tea-patch" type="button" aria-label="나무에서 찻잎 따기" hidden><i></i><i></i><i></i></button>
     <span id="bori-hint" hidden>찻잎은 밭 앞 나무에서 따면 돼~</span>
-    <span id="map-sign-art" aria-hidden="true"></span>
+    <span id="map-sign-art" class="wooden-sign" aria-hidden="true"><span></span></span>
     <button id="map-sign" class="map-spot" type="button" aria-label="마을 지도 보기"></button>
-    <span id="notice-board-art" aria-hidden="true"></span>
+    <span id="notice-board-art" class="wooden-sign" aria-hidden="true"><span></span></span>
     <button id="notice-board" class="map-spot" type="button" aria-label="마을 게시판 보기"></button>
     <p id="dive-haul" role="status" hidden></p>
     <div id="dive-controls" hidden></div>
@@ -61,6 +61,9 @@
     <span id="chichi-waiting" class="resident-greeting" role="status" hidden>빨리 와!</span>
     <button id="chichi" class="resident" type="button" aria-label="치치에게 다가가기" hidden><canvas width="24" height="24" aria-hidden="true"></canvas><span>치치</span></button>
     <div id="coco" class="resident"><canvas width="24" height="24" aria-hidden="true"></canvas><span id="coco-name" hidden>코코</span></div>
+    <button id="mochi" class="resident" type="button" aria-label="모찌와 대화하기" hidden><canvas width="24" height="24" aria-hidden="true"></canvas><span>모찌</span></button>
+    <button id="shrine-cat" class="resident" type="button" aria-label="산신령을 모시는 고양이와 대화하기" hidden><canvas width="24" height="24" aria-hidden="true"></canvas><span>산지기</span></button>
+    <span id="new-resident-speech" class="resident-greeting" role="status" hidden></span>
     <div id="village-seats" hidden></div>
     <canvas id="sleeping-player" width="10" height="9" role="img" aria-label="이불을 덮고 누워 쉬는 주인공" hidden></canvas>
     <canvas id="player" width="16" height="16" aria-hidden="true"></canvas>

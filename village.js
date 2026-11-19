@@ -174,7 +174,8 @@ function render() {
     write(activeVillageInterior === 'tea-house' ? '보리의 찻집' : '작은 집', '아래쪽 출입문으로 걸어가면 마을로 돌아가요.');
   } else if (scene === 'arrival') {
     write('마을에 도착했다', '방향키·터치로 이동해요.', diveMastered ? '코코' : '낯선 고양이', '광장에서 보리를 만나 봐요.');
-    if (villageSave.slots().some(Boolean)) option('저장한 장면 이어하기', () => openSaveSlots('load'));
+    option('불러오기', () => openSaveSlots('load'));
+    option('새 게임', () => openSaveSlots('new'));
   } else if (scene === 'introduction') {
     write('보리에게 답하기', '');
     option('A. 나는 인간이야. 여기는 어디야?', () => go('tea-request', 'honest'));
@@ -414,6 +415,7 @@ function tick(now) {
     }
     if (afterLuluHomeGuide()) updateLuluDiveGuide(now, elapsed);
     walkVillageResident(coco, cocoSprite, cocoContext, 'coco', now, elapsed, false);
+    updateNewResidents(now, elapsed);
     if (teaInvitationPending()) updateBoriTeaInvitation(now, elapsed);
     else {
       walkVillageResident(bori, boriButton, boriContext, 'bori', now, elapsed, target === bori || distanceTo(bori) < 10 || state.scene === 'tea-pick');
@@ -546,6 +548,12 @@ function openSaveSlots(mode) {
     slotButton(label, action);
     dialogChoices(saveSlotsDialog)[0]?.focus();
   }
+  const newGame = () => confirmAction('저장하지 않은 진행은 사라져요. 새 게임을 시작할까요?', '새 게임 시작', () => location.reload());
+  if (mode === 'new') {
+    if (!saveSlotsDialog.open) saveSlotsDialog.showModal();
+    newGame();
+    return;
+  }
   villageSave.slots().forEach((slot, index) => {
     const summary = slot ? (slot.savedAt ? slotDate.format(slot.savedAt) : '이전 저장') + ' · 집 ' + slot.data.repairs.level + '단계' : '빈 슬롯';
     const save = () => {
@@ -564,11 +572,17 @@ function openSaveSlots(mode) {
       else save();
     }, mode === 'load' && !slot);
   });
-  if (mode === 'save') slotButton('새 게임', () =>
-    confirmAction('저장하지 않은 진행은 사라져요. 새 게임을 시작할까요?', '새 게임 시작', () => location.reload()));
+  slotButton('새 게임', newGame);
   if (!saveSlotsDialog.open) saveSlotsDialog.showModal();
   dialogChoices(saveSlotsDialog)[0]?.focus();
 }
+const toolsButton = document.createElement('button');
+toolsButton.id = 'village-tools-menu';
+toolsButton.type = 'button';
+toolsButton.textContent = '⚙️';
+toolsButton.setAttribute('aria-label', '불러오기와 새 게임');
+document.querySelector('.village-tool-buttons').append(toolsButton);
+toolsButton.onclick = () => openSaveSlots('load');
 function resumeSlot(index) {
   const restored = villageSave.resume(index);
   if (!restored) return;

@@ -14,7 +14,9 @@ const residentPalettes = {
   coco: { outline: '#574033', fur: '#e9af64', shade: '#b87845', cream: '#fff0c8', pink: '#f39b97', eyes: '#422d35', scarf: '#80a067' },
   bori: { outline: '#232231', fur: '#55556e', shade: '#38384f', cream: '#fff2db', pink: '#e99aa5', eyes: '#262130', scarf: '#77a9b3' },
   lulu: { outline: '#44384b', fur: '#a58da9', shade: '#695875', cream: '#fff0de', pink: '#f3a5af', eyes: '#3d3146', scarf: '#df9a61' },
-  chichi: { outline: '#56303b', fur: '#bc7762', shade: '#8e514b', cream: '#ffe4c4', pink: '#f3a1a8', eyes: '#4a2934', scarf: '#d8839f' }
+  chichi: { outline: '#56303b', fur: '#bc7762', shade: '#8e514b', cream: '#ffe4c4', pink: '#f3a1a8', eyes: '#4a2934', scarf: '#d8839f' },
+  mochi: { outline: '#705b46', fur: '#f4e3bc', shade: '#c9ad82', cream: '#fff4dc', pink: '#eeac9c', eyes: '#493b31', scarf: '#788144' },
+  'shrine-cat': { outline: '#30262e', fur: '#57505c', shade: '#8b5548', cream: '#ffebce', pink: '#d28f85', eyes: '#cf974c', scarf: '#423962' }
 };
 
 function drawResidentCat(context, id, motion, direction, time) {
@@ -61,6 +63,28 @@ function drawResidentCat(context, id, motion, direction, time) {
   block(eyes, 14, 10, 1, blink ? 1 : 2);
   block(shade, 11, 12, 2, 1);
   block(eyes, 11, 13, 2, 1);
+  if (id === 'mochi') {
+    block(cream, 6, 10, 6, 4);
+    block(eyes, 9, 10, 2, 1);
+    block(eyes, 13, 10, 2, 1);
+    block(outline, 6, 16, 12, 4);
+    block(scarf, 7, 16, 10, 4);
+    block('#a3a35a', 9, 19, 5, 1);
+    block(cream, 10, 16, 1, 2);
+    block(cream, 14, 16, 1, 2);
+    block('#ce5e78', 11, 15, 3, 4);
+    block('#ffa9b0', 11, 15, 3, 1);
+  } else if (id === 'shrine-cat') {
+    block('#aa494b', 7, 7, 10, 1);
+    block('#e2ad55', 11, 6, 2, 2);
+    block(scarf, 7, 17, 10, 4);
+    block('#b84b4b', 8, 18, 8, 1);
+    block(cream, 6, 15, 2, 3);
+    block(cream, 16, 15, 2, 3);
+    block('#719783', 16, 18, 2, 1);
+    block('#e8b05a', 5, 17, 3, 2);
+    block('#ffe4a1', 6, 16, 1, 1);
+  }
 }
 
 function drawVillageSprite(context, id, motion, direction, time) {

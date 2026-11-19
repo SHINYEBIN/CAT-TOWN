@@ -20,12 +20,13 @@ p { white-space: pre-line; }
 }
 .prologue { display: block; width: 100%; aspect-ratio: 16 / 9; background: #171314; }
 #village {
+  --village-character-size: clamp(35px, 9.2vw, 62px);
   position: relative; aspect-ratio: 3 / 2; touch-action: pan-y; image-rendering: pixelated;
   background: #8ba75c url('village-map.webp') center / 100% 100% no-repeat;
 }
 #village canvas, .place { position: absolute; transform: translate(-50%, -85%); }
 #village canvas {
-  width: clamp(30px, 8vw, 54px); pointer-events: none; image-rendering: pixelated;
+  width: var(--village-character-size); pointer-events: none; image-rendering: pixelated;
   filter: drop-shadow(1px 1px #3b2b20);
 }
 #coco { left: 71%; top: 46%; }
@@ -78,6 +79,10 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
   border: 0; box-shadow: none; background: transparent;
 }
 #village #bori canvas, #village .resident canvas { position: static; transform: none; }
+#village :is(#mochi, #shrine-cat),
+#village :is(#mochi, #shrine-cat):is(:hover, :active, :focus, :focus-visible) {
+  background: transparent; border: 0; box-shadow: none; outline: none;
+}
 #bori > span, .resident > span {
   position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
   color: #fff9df; font-size: .7rem; font-weight: 700; line-height: 1.1;
@@ -100,8 +105,8 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
   #village {
     margin-inline: -8px; border-width: 3px;
     aspect-ratio: 6 / 5;
+    --village-character-size: clamp(39px, 11.5vw, 55px);
   }
-  #village canvas { width: clamp(34px, 10vw, 48px); }
   #village .resident-greeting, #village #bori-hint { margin-top: -13px; }
 }
 @media (hover: none) and (pointer: coarse) {
@@ -227,6 +232,10 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
 .answers-only #choices { margin-top: 0; }
 
 #music, #music:hover { border: 0; box-shadow: none; background: transparent; color: #603924; }
+#village-tools-menu, #village-tools-menu:hover {
+  width: 44px; padding: 0; border: 0; box-shadow: none; background: transparent; font-size: 1.15rem;
+}
+#village:not(.dive-map) .dive-spot[data-spot="pond"] { width: 26%; height: 22%; }
 #village.clearing-map {
   background: #81925d url('village-clearing.webp') center / 100% 100% no-repeat;
 }
@@ -390,33 +399,48 @@ button:focus-visible, #village:focus-visible { outline: 3px solid #924519; outli
 }
 .resident-greeting { white-space: pre-line; }
 
-#map-sign-art, #notice-board-art {
-  position: absolute; z-index: 2; top: 33.5%;
-  width: clamp(17px, 4.2%, 34px); height: clamp(12px, 4%, 25px);
-  transform: translate(-50%, -50%);
-  border: 2px solid #785331; border-radius: 1px; pointer-events: none;
-  box-shadow: 0 1px #3a271a;
+.wooden-sign {
+  position: absolute; z-index: 2; top: 35%; width: clamp(25px, 7%, 58px);
+  aspect-ratio: 1.95; transform: translate(-50%, -50%);
+  border: 2px solid #5c3822; pointer-events: none;
+  background: repeating-linear-gradient(#ad7649 0 24%, #815337 25% 31%);
+  box-shadow: inset 0 1px #e6ac6c, 0 2px #302217;
 }
-#map-sign-art {
-  left: 68%;
+#map-sign-art { left: 68%; }
+#notice-board-art { left: 77%; }
+.wooden-sign::before {
+  content: ''; position: absolute; z-index: 1; inset: -39% -14% auto; height: 48%;
   background:
-    radial-gradient(ellipse at 75% 60%, #77ac9f 0 20%, transparent 24%),
-    radial-gradient(ellipse at 21% 25%, #78965d 0 13%, transparent 18%),
-    linear-gradient(138deg, transparent 39%, #bc814b 41% 54%, transparent 57%),
+    linear-gradient(transparent 59%, #6e4933 60% 75%, #392b23 76%),
+    repeating-linear-gradient(90deg, #6d5947 0 13%, #9b8061 14% 19%, #42362c 20% 23%);
+  clip-path: polygon(13% 0, 87% 0, 87% 22%, 93% 22%, 93% 48%, 100% 48%, 100% 100%, 0 100%, 0 48%, 7% 48%, 7% 22%, 13% 22%);
+}
+.wooden-sign::after {
+  content: ''; position: absolute; inset: 100% 7% auto; height: 35%;
+  background:
+    linear-gradient(90deg, #56371f 25%, #a36d40 26% 65%, #68432a 66%) left / 15% 100% no-repeat,
+    linear-gradient(90deg, #56371f 25%, #a36d40 26% 65%, #68432a 66%) right / 15% 100% no-repeat;
+}
+.wooden-sign > span { position: absolute; inset: 16% 8%; }
+#map-sign-art > span {
+  inset-inline: 12%;
+  border: 1px solid #d3af70;
+  background:
+    linear-gradient(#a2583c, #a2583c) 22% 26% / 18% 25% no-repeat,
+    linear-gradient(#8f5b3b, #8f5b3b) 55% 20% / 13% 20% no-repeat,
+    radial-gradient(ellipse at 77% 72%, #669e9e 0 17%, transparent 18%),
+    radial-gradient(ellipse at 19% 68%, #7b9a60 0 13%, transparent 14%),
+    linear-gradient(145deg, transparent 38%, #b58c56 39% 51%, transparent 52%),
     #f1dc9a;
 }
-#notice-board-art {
-  left: 77%;
+#notice-board-art > span {
   background:
-    radial-gradient(circle at 27% 26%, #9b412b 0 7%, transparent 9%),
-    radial-gradient(circle at 73% 43%, #516746 0 7%, transparent 9%),
-    linear-gradient(#f3deb2, #f3deb2) 15% 30% / 39% 63% no-repeat,
-    linear-gradient(#e7c594, #e7c594) 87% 65% / 36% 58% no-repeat,
-    #ad7543;
-}
-#map-sign-art::after, #notice-board-art::after {
-  content: ''; position: absolute; top: 100%; left: 42%; width: 16%; height: 65%;
-  background: #785331; z-index: -1;
+    radial-gradient(circle at 47% 13%, #a6543a 0 4%, transparent 5%),
+    repeating-linear-gradient(transparent 0 20%, #ad8854 21% 25%) 50% 55% / 40% 52% no-repeat,
+    linear-gradient(#f5d89a, #e4bc77) center / 53% 95% no-repeat,
+    linear-gradient(#c4c591, #c4c591) left top / 18% 63% no-repeat,
+    linear-gradient(#e2a99a, #e2a99a) left bottom / 14% 30% no-repeat,
+    linear-gradient(#e8d9bc, #e8d9bc) right bottom / 19% 54% no-repeat;
 }
 #village[data-night="true"] :is(#map-sign-art, #notice-board-art) { filter: brightness(.7); }
 #notice-dialog {
