@@ -174,8 +174,6 @@ function render() {
     write(activeVillageInterior === 'tea-house' ? '보리의 찻집' : '작은 집', '아래쪽 출입문으로 걸어가면 마을로 돌아가요.');
   } else if (scene === 'arrival') {
     write('마을에 도착했다', '방향키·터치로 이동해요.', diveMastered ? '코코' : '낯선 고양이', '광장에서 보리를 만나 봐요.');
-    option('불러오기', () => openSaveSlots('load'));
-    option('새 게임', () => openSaveSlots('new'));
   } else if (scene === 'introduction') {
     write('보리에게 답하기', '');
     option('A. 나는 인간이야. 여기는 어디야?', () => go('tea-request', 'honest'));
@@ -582,6 +580,20 @@ toolsButton.type = 'button';
 toolsButton.textContent = '⚙️';
 toolsButton.setAttribute('aria-label', '불러오기와 새 게임');
 document.querySelector('.village-tool-buttons').append(toolsButton);
+const arrivalMenu = document.createElement('dialog');
+arrivalMenu.id = 'arrival-menu';
+arrivalMenu.setAttribute('aria-label', '고양이 마을 시작');
+for (const [label, action] of [
+  ['불러오기', () => { arrivalMenu.close(); openSaveSlots('load'); }],
+  ['새 게임', () => { arrivalMenu.close(); map.focus({ preventScroll: true }); }]
+]) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.onclick = action;
+  arrivalMenu.append(button);
+}
+document.body.append(arrivalMenu);
 toolsButton.onclick = () => openSaveSlots('load');
 function resumeSlot(index) {
   const restored = villageSave.resume(index);
@@ -668,6 +680,7 @@ function finishPrologue(reveal = false) {
     go(previous.scene, previous.party);
   } else {
     go('arrival');
+    arrivalMenu.showModal();
     map.scrollIntoView({ block: 'nearest', behavior: motionPreference.matches ? 'instant' : 'smooth' });
   }
   if (reveal === true && !map.hidden) {
